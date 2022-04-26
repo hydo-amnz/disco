@@ -52,10 +52,17 @@ public class TestableConcurrencyObjectImpl implements TestableConcurrencyObject 
         TransactionContext.create();
         TransactionContext.set(transactionIdPrefix+TransactionContext.get());
         TransactionContext.putMetadata(metadataKey, metadataValue);
+
+        // Lower the priority of the current thread to make it less likely to be picked up
+        // by the common ForkJoinPool
+        Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
     }
 
     public static void after() {
         TransactionContext.clear();
+        // This is not really needed, but it sounds nicer to restore the priority of the main thread
+        // after the test
+        Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
         lock.unlock();
     }
 
